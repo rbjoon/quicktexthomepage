@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kok - 자주 쓰는 문구 빠른 복사</title>
+    <meta name="description" content="카톡 답장, 인사말, 거절 멘트를 한 번의 탭으로. Kok에 저장하면 어디서든 1초 복사.">
+    <meta property="og:title" content="Kok - 자주 쓰는 문구 빠른 복사">
+    <meta property="og:description" content="카톡 답장, 인사말, 거절 멘트를 한 번의 탭으로. Kok에 저장하면 어디서든 1초 복사.">
+    <meta property="og:image" content="image/kok_app.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0d1117;
+            --surface: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.13);
+            --text: #f0f4f8;
+            --muted: #b4c2d0;
+            --sub: #ccd6e0;
+            --cyan: #06b6d4;
+            --cyan2: #67e8f9;
+            --cyan-dim: rgba(6,182,212,0.14);
+            --cyan-border: rgba(6,182,212,0.3);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Background */
+        .bg-canvas {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); }
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(6,182,212,0.15), transparent 70%);
+            top: -150px; left: -100px;
+            animation: drift1 24s ease-in-out infinite;
+        }
+        .orb-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%);
+            bottom: 10%; right: -80px;
+            animation: drift2 30s ease-in-out infinite;
+        }
+        @keyframes drift1 {
+            0%,100% { transform: translate(0,0); }
+            50% { transform: translate(40px,50px); }
+        }
+        @keyframes drift2 {
+            0%,100% { transform: translate(0,0); }
+            50% { transform: translate(-40px,-30px); }
+        }
+        .bg-canvas::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 42px 42px;
+        }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(13,17,23,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .nav-logo {
+            display: flex; align-items: center; gap: 9px;
+            text-decoration: none; color: #fff;
+            font-weight: 700; font-size: 1rem;
+        }
+        .nav-logo img { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-link {
+            color: var(--sub); text-decoration: none;
+            font-size: 0.88rem; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-link:hover { color: #fff; }
+        .nav-btn {
+            display: inline-flex; align-items: center;
+            background: var(--cyan); color: #000;
+            font-size: 0.82rem; font-weight: 700;
+            padding: 7px 16px; border-radius: 100px; text-decoration: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .nav-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* Page */
+        .page {
+            position: relative; z-index: 1;
+            max-width: 1060px; margin: 0 auto; padding: 0 24px;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border) 30%, var(--border) 70%, transparent);
+        }
+
+        /* ─── Hero ─── */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+            min-height: calc(100vh - 60px);
+            padding-top: 80px;
+            padding-bottom: 60px;
+        }
+        .hero-left { /* 텍스트 영역 */ }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--cyan-dim); border: 1px solid var(--cyan-border);
+            color: var(--cyan2); font-size: 0.75rem; font-weight: 600;
+            padding: 5px 14px; border-radius: 100px; margin-bottom: 24px;
+            letter-spacing: 0.4px;
+        }
+        .badge-dot {
+            width: 6px; height: 6px; background: var(--cyan); border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.75); }
+        }
+        .hero h1 {
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 900; letter-spacing: -2px; line-height: 1;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 30%, var(--cyan2) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero-tagline {
+            font-size: 1.1rem; color: var(--sub); line-height: 1.7;
+            margin-bottom: 32px;
+        }
+        .hero-tagline strong { color: var(--cyan2); font-weight: 600; }
+
+        .store-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+        .store-btn {
+            display: inline-flex; align-items: center; gap: 9px;
+            padding: 11px 20px; border-radius: 12px; text-decoration: none;
+            font-weight: 600; font-size: 0.9rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .store-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .store-btn-appstore { background: #fff; color: #000; }
+        .store-btn-play { background: #1a1f2e; border: 1px solid rgba(255,255,255,0.12); color: #fff; }
+        .store-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .store-btn-text { text-align: left; }
+        .store-btn-sub { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.6; }
+        .store-btn-name { display: block; font-size: 0.9rem; font-weight: 700; }
+
+        .hero-right {
+            display: flex; flex-direction: column; align-items: center; gap: 32px;
+        }
+        .hero-app-icon {
+            width: 120px; height: 120px; border-radius: 28px; object-fit: cover;
+            box-shadow: 0 24px 64px rgba(6,182,212,0.3), 0 0 0 1px rgba(255,255,255,0.08);
+        }
+        .hero-stats {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
+        }
+        .hero-stat {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 18px 16px; text-align: center;
+        }
+        .hero-stat-val {
+            font-size: 1.5rem; font-weight: 800; color: var(--cyan); letter-spacing: -0.5px;
+        }
+        .hero-stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+
+        /* ─── Section layout ─── */
+        .section { padding: 64px 0; }
+
+        .section-2col {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 56px;
+            align-items: start;
+        }
+        .section-label {
+            position: sticky; top: 80px;
+        }
+        .eyebrow {
+            display: inline-block;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan-border);
+            padding: 4px 10px; border-radius: 100px; margin-bottom: 14px;
+        }
+        .sec-title {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800; letter-spacing: -0.5px;
+            margin-bottom: 12px; color: #fff; line-height: 1.25;
+        }
+        .sec-desc {
+            font-size: 0.9rem; color: var(--muted); line-height: 1.75;
+        }
+
+        /* ─── Features grid ─── */
+        .features-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+        }
+        .feature-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; padding: 22px 20px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .feature-card:hover { border-color: var(--cyan-border); transform: translateY(-3px); }
+        .feature-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--cyan-dim); border: 1px solid var(--cyan-border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 14px;
+        }
+        .feature-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+        /* ─── Token section ─── */
+        .token-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px;
+        }
+        .token-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+        .token-label + .token-label { margin-top: 24px; }
+        .token-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .token-item {
+            background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 13px 14px;
+            transition: border-color 0.2s;
+        }
+        .token-item:hover { border-color: var(--cyan-border); }
+        .token-code {
+            font-family: 'SF Mono', 'Consolas', monospace; font-size: 0.75rem;
+            color: var(--cyan); background: var(--cyan-dim);
+            padding: 2px 8px; border-radius: 5px; display: inline-block; margin-bottom: 6px;
+        }
+        .token-desc { font-size: 0.78rem; color: var(--sub); }
+        .token-example { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+
+        /* ─── Steps ─── */
+        .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+        .step { padding: 24px 20px; text-align: center; }
+        .step-num {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), #6366f1);
+            color: #fff; font-size: 0.95rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+        }
+        .step-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 7px; }
+        .step-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+        /* ─── Lang + Privacy ─── */
+        .bottom-2col {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;
+        }
+        .lang-box, .privacy-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px;
+        }
+        .box-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .box-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+        .lang-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+        .lang-badge {
+            background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 100px; padding: 6px 14px;
+            font-size: 0.82rem; font-weight: 600; color: var(--sub);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .legal-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+        .legal-link {
+            color: var(--cyan2); text-decoration: none; font-size: 0.82rem; font-weight: 600;
+            border-bottom: 1px solid var(--cyan-border); padding-bottom: 1px;
+            transition: opacity 0.2s;
+        }
+        .legal-link:hover { opacity: 0.75; }
+
+        /* ─── Download CTA ─── */
+        .cta-section {
+            text-align: center; padding: 64px 0 48px;
+        }
+        .cta-section .sec-title { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 12px; }
+        .cta-section .sec-desc { color: var(--muted); margin: 0 auto 32px; max-width: 400px; font-size: 0.9rem; }
+        .cta-section .store-btns { justify-content: center; }
+        .cta-contact { margin-top: 20px; font-size: 0.8rem; color: var(--muted); }
+        .cta-contact a { color: var(--cyan2); text-decoration: none; }
+
+        /* ─── Footer ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 0;
+            color: var(--muted); font-size: 0.8rem; line-height: 1.9;
+        }
+        .footer-inner {
+            max-width: 1060px; margin: 0 auto; padding: 0 24px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            flex-wrap: wrap; gap: 20px;
+        }
+        .footer-logo {
+            display: flex; align-items: center; gap: 9px;
+            font-weight: 700; font-size: 0.95rem; color: #fff; margin-bottom: 6px;
+        }
+        .footer-logo img { width: 26px; height: 26px; border-radius: 7px; }
+        .footer-links { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+        .footer-link { color: var(--muted); text-decoration: none; font-size: 0.78rem; transition: color 0.2s; }
+        .footer-link:hover { color: var(--cyan2); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 860px) {
+            .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 90px; gap: 36px; }
+            .hero-right { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .hero-app-icon { width: 90px; height: 90px; }
+            .hero-stats { grid-template-columns: repeat(4, 1fr); width: 100%; }
+            .section-2col { grid-template-columns: 1fr; gap: 28px; }
+            .section-label { position: static; }
+            .bottom-2col { grid-template-columns: 1fr; }
+            .steps { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            nav { padding: 0 16px; }
+            .nav-link:not(:last-child) { display: none; }
+            .nav-btn { font-size: 0.78rem; padding: 6px 12px; }
+            .page { padding: 0 16px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .token-grid { grid-template-columns: 1fr 1fr; }
+            .steps { grid-template-columns: 1fr; }
+            .hero-stats { grid-template-columns: 1fr 1fr; }
+            .store-btns { flex-direction: column; }
+            .store-btn { justify-content: center; }
+            .footer-inner { flex-direction: column; gap: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-canvas" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Nav -->
+    <nav>
+        <a href="#" class="nav-logo">
+            <img src="image/kok_app.png" alt="Kok">
+            Kok
+        </a>
+        <div class="nav-links">
+            <a href="#features" class="nav-link">기능</a>
+            <a href="#tokens" class="nav-link">토큰</a>
+            <a href="#support" class="nav-link">지원</a>
+            <a href="#download" class="nav-btn" id="nav-download-btn">다운로드</a>
+        </div>
+    </nav>
+
+    <div class="page">
+
+        <!-- ── Hero ── -->
+        <section class="hero">
+            <div class="hero-left">
+                <div class="hero-badge">
+                    <div class="badge-dot"></div>
+                    iOS &amp; Android
+                </div>
+                <h1>Kok</h1>
+                <p class="hero-tagline">
+                    자주 쓰는 문구를 <strong>한 번의 탭</strong>으로.<br>
+                    저장하면 언제 어디서든 1초 복사.
+                </p>
+                <div class="store-btns">
+                    <a href="https://apps.apple.com/kr/app/%EC%BD%95-%EC%9E%90%EC%A3%BC%EC%93%B0%EB%8A%94%EB%AC%B8%EA%B5%AC%EB%B3%B5%EC%82%AC/id6762957091" target="_blank" rel="noopener" class="store-btn store-btn-appstore">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                        <div class="store-btn-text">
+                            <span class="store-btn-sub">Download on the</span>
+                            <span class="store-btn-name">App Store</span>
+                        </div>
+                    </a>
+                    <a href="#" onclick="alert('Google Play 출시 준비중입니다.\n곧 만나요!'); return false;" class="store-btn store-btn-play">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2 2 0 0 1-.99-1.76V2a2 2 0 0 1 .99-1.76l11.9 11.76-11.9 11.76zm1.63-20.19v16.86L16.13 12 4.81 3.57zM20.3 14.06l-2.35 1.32-2.62-2.59 2.62-2.59 2.35 1.32a1.97 1.97 0 0 1 0 3.54zM5.72.44l10.77 6.04-2.62 2.59L5.72.44zM16.49 14.93L5.72 20.97l8.15-8.04 2.62 2.6z"/></svg>
+                        <div class="store-btn-text">
+                            <span class="store-btn-sub">Get it on</span>
+                            <span class="store-btn-name">Google Play</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <img src="image/kok_app.png" alt="Kok 앱 아이콘" class="hero-app-icon">
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-val">1초</div>
+                        <div class="hero-stat-lbl">클립보드 복사</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-val">4개</div>
+                        <div class="hero-stat-lbl">지원 언어</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-val">10종</div>
+                        <div class="hero-stat-lbl">내장 템플릿</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-val">100%</div>
+                        <div class="hero-stat-lbl">기기 저장</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ── Features ── -->
+        <section id="features" class="section">
+            <div class="section-2col">
+                <div class="section-label">
+                    <div class="eyebrow">Features</div>
+                    <h2 class="sec-title">필요한 기능만,<br>빠르게</h2>
+                    <p class="sec-desc">복잡한 설정 없이 바로 쓸 수 있는 핵심 기능들.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <div class="feature-title">한 탭 복사</div>
+                        <div class="feature-desc">탭 하나로 즉시 클립보드 복사. 카톡·메일 어디서나.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🗂️</div>
+                        <div class="feature-title">카테고리 정리</div>
+                        <div class="feature-desc">8가지 파스텔 컬러로 카테고리별 분류.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⭐</div>
+                        <div class="feature-title">즐겨찾기 고정</div>
+                        <div class="feature-desc">자주 쓰는 문구를 상단에 핀 고정.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-title">민감 정보 마스킹</div>
+                        <div class="feature-desc">계좌번호·비밀번호는 목록에서 자동 숨김.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📤</div>
+                        <div class="feature-title">외부 앱 수신</div>
+                        <div class="feature-desc">다른 앱에서 공유하면 바로 저장 화면으로.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💾</div>
+                        <div class="feature-title">백업 / 복원</div>
+                        <div class="feature-desc">JSON 파일로 백업. 기기 교체 시에도 안전.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <div class="feature-title">내장 템플릿</div>
+                        <div class="feature-desc">인사·업무·거절·축하 등 10종 프리셋 제공.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌙</div>
+                        <div class="feature-title">다크 / 라이트</div>
+                        <div class="feature-desc">다크·라이트·시스템 자동 테마 지원.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ── How it works ── -->
+        <section class="section">
+            <div class="section-2col">
+                <div class="section-label">
+                    <div class="eyebrow">How it works</div>
+                    <h2 class="sec-title">3단계로<br>시작하기</h2>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-title">문구 등록</div>
+                        <div class="step-desc">자주 쓰는 문구를 카테고리와 함께 저장하거나 내장 템플릿에서 바로 가져오세요.</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-title">탭 한 번</div>
+                        <div class="step-desc">목록에서 원하는 문구를 탭하면 즉시 클립보드에 복사됩니다.</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-title">붙여넣기</div>
+                        <div class="step-desc">카카오톡, 이메일, 메모 등 어떤 앱에서든 붙여넣기. 끝!</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">+</div>
+                        <div class="step-title">토큰 활용</div>
+                        <div class="step-desc">{today}, {name} 등으로 날짜·이름이 자동 채워지는 동적 문구를 만드세요.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ── Tokens ── -->
+        <section id="tokens" class="section">
+            <div class="section-2col">
+                <div class="section-label">
+                    <div class="eyebrow">Smart Tokens</div>
+                    <h2 class="sec-title">스마트 토큰으로<br>동적 문구 만들기</h2>
+                    <p class="sec-desc"><code style="color:var(--cyan);background:var(--cyan-dim);padding:2px 7px;border-radius:5px;font-size:0.82em">{토큰}</code> 삽입 시 복사할 때 자동으로 실제 값으로 치환됩니다.</p>
+                </div>
+                <div class="token-box">
+                    <div class="token-label">날짜 / 시각</div>
+                    <div class="token-grid">
+                        <div class="token-item">
+                            <div class="token-code">{today}</div>
+                            <div class="token-desc">오늘 날짜</div>
+                            <div class="token-example">→ 5월 12일(월)</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{tomorrow}</div>
+                            <div class="token-desc">내일 날짜</div>
+                            <div class="token-example">→ 5월 13일(화)</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{time}</div>
+                            <div class="token-desc">현재 시각</div>
+                            <div class="token-example">→ 오전 9:30</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{yesterday}</div>
+                            <div class="token-desc">어제 날짜</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{dday:날짜}</div>
+                            <div class="token-desc">D-Day 계산</div>
+                            <div class="token-example">→ D-228</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{nextMon~Sun}</div>
+                            <div class="token-desc">다음 해당 요일</div>
+                        </div>
+                    </div>
+
+                    <div class="token-label" style="margin-top:20px;">내 정보</div>
+                    <div class="token-grid">
+                        <div class="token-item">
+                            <div class="token-code">{name}</div>
+                            <div class="token-desc">이름</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{phone}</div>
+                            <div class="token-desc">전화번호</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{email}</div>
+                            <div class="token-desc">이메일</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{company}</div>
+                            <div class="token-desc">회사명</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{bankAccount}</div>
+                            <div class="token-desc">계좌번호</div>
+                        </div>
+                        <div class="token-item">
+                            <div class="token-code">{ask:라벨}</div>
+                            <div class="token-desc">복사 시 직접 입력</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ── Languages + Privacy ── -->
+        <section id="support" class="section">
+            <div class="bottom-2col">
+                <div class="lang-box">
+                    <div class="box-title">4개 언어 완전 지원</div>
+                    <div class="box-desc">앱 설정에서 언어를 바꾸면 재시작 없이 즉시 전환됩니다.</div>
+                    <div class="lang-badges">
+                        <div class="lang-badge"><span>🇰🇷</span> 한국어</div>
+                        <div class="lang-badge"><span>🇺🇸</span> English</div>
+                        <div class="lang-badge"><span>🇯🇵</span> 日本語</div>
+                        <div class="lang-badge"><span>🇨🇳</span> 中文</div>
+                    </div>
+                </div>
+                <div class="privacy-box">
+                    <div class="box-title">🔐 모든 데이터는 기기 안에서만</div>
+                    <div class="box-desc">저장한 문구는 사용자 기기 내부에만 보관됩니다. 외부 서버로 전송하거나 수집하지 않습니다. 무료 운영을 위해 Google AdMob 광고가 표시됩니다.</div>
+                    <div class="legal-links">
+                        <a href="privacy_policy.html" class="legal-link">개인정보처리방침 →</a>
+                        <a href="terms_of_service.html" class="legal-link">서비스이용약관 →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ── Download CTA ── -->
+        <section id="download" class="cta-section">
+            <div class="eyebrow">Download</div>
+            <h2 class="sec-title">지금 바로 시작하세요</h2>
+            <p class="sec-desc">무료로 다운로드하고 자주 쓰는 문구를 1초 복사로 바꿔보세요.</p>
+            <div class="store-btns">
+                <a href="#" class="store-btn store-btn-appstore">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    <div class="store-btn-text">
+                        <span class="store-btn-sub">Download on the</span>
+                        <span class="store-btn-name">App Store</span>
+                    </div>
+                </a>
+                <a href="#" class="store-btn store-btn-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2 2 0 0 1-.99-1.76V2a2 2 0 0 1 .99-1.76l11.9 11.76-11.9 11.76zm1.63-20.19v16.86L16.13 12 4.81 3.57zM20.3 14.06l-2.35 1.32-2.62-2.59 2.62-2.59 2.35 1.32a1.97 1.97 0 0 1 0 3.54zM5.72.44l10.77 6.04-2.62 2.59L5.72.44zM16.49 14.93L5.72 20.97l8.15-8.04 2.62 2.6z"/></svg>
+                    <div class="store-btn-text">
+                        <span class="store-btn-sub">Get it on</span>
+                        <span class="store-btn-name">Google Play</span>
+                    </div>
+                </a>
+            </div>
+            <p class="cta-contact">문의: <a href="mailto:coderabbitapp@gmail.com">coderabbitapp@gmail.com</a></p>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-inner">
+            <div>
+                <div class="footer-logo">
+                    <img src="image/kok_app.png" alt="Kok">
+                    Kok
+                </div>
+                <div>자주 쓰는 문구를 한 번의 탭으로.</div>
+            </div>
+            <div>
+                <div>상호: 코드래빗 &nbsp;|&nbsp; 대표: 이현준</div>
+                <div>사업자등록번호: 740-69-00653</div>
+                <div>이메일: <a href="mailto:coderabbitapp@gmail.com" style="color:var(--muted);text-decoration:none;">coderabbitapp@gmail.com</a></div>
+                <div class="footer-links">
+                    <a href="privacy_policy.html" class="footer-link">개인정보처리방침</a>
+                    <a href="terms_of_service.html" class="footer-link">서비스이용약관</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const APP_STORE_URL = 'https://apps.apple.com/kr/app/%EC%BD%95-%EC%9E%90%EC%A3%BC%EC%93%B0%EB%8A%94%EB%AC%B8%EA%B5%AC%EB%B3%B5%EC%82%AC/id6762957091';
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        const navBtn = document.getElementById('nav-download-btn');
+        if (isIOS) {
+            navBtn.href = APP_STORE_URL;
+            navBtn.target = '_blank';
+            navBtn.rel = 'noopener';
+        }
+    </script>
+
+</body>
+</html>
